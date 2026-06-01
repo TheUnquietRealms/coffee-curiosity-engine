@@ -80,12 +80,21 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
         )}
       </div>
 
-      <ul className="nav-list">
+      <ul className="nav-list" role="listbox" aria-label="Articles">
         {sorted.map(article => (
           <li
             key={article.id}
+            role="option"
+            aria-selected={article.id === selectedId}
+            tabIndex={0}
             className={`nav-item${article.id === selectedId ? ' nav-item--active' : ''}`}
             onClick={() => onSelect(article.id)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelect(article.id)
+              }
+            }}
           >
             {renamingId === article.id ? (
               <input
@@ -95,6 +104,7 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
                 onChange={e => setRenameValue(e.target.value)}
                 onBlur={() => commitRename(article.id)}
                 onKeyDown={e => {
+                  e.stopPropagation()
                   if (e.key === 'Enter') commitRename(article.id)
                   if (e.key === 'Escape') setRenamingId(null)
                 }}
@@ -118,7 +128,7 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
                     className="btn-nav-action"
                     title="Rename"
                     aria-label="Rename article"
-                    onClick={() => startRename(article)}
+                    onClick={e => { e.stopPropagation(); startRename(article) }}
                   >
                     Rename
                   </button>
@@ -126,7 +136,7 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
                     className="btn-nav-action btn-nav-action--danger"
                     title="Delete article"
                     aria-label="Delete article"
-                    onClick={() => handleDelete(article.id)}
+                    onClick={e => { e.stopPropagation(); handleDelete(article.id) }}
                   >
                     Delete
                   </button>

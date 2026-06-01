@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Article, ArticleStatus, WritingMode } from '../types'
 import { exportMarkdown, getMarkdown } from '../lib/storage'
 import { MODE_LIST } from '../lib/modes'
@@ -17,11 +17,21 @@ export default function Editor({ article, onChange, saveStatus }: Props) {
   const [copied, setCopied] = useState(false)
   const [settingTarget, setSettingTarget] = useState(false)
   const [targetInput, setTargetInput] = useState('')
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
 
+  // reset target form when switching articles
   useEffect(() => {
     setSettingTarget(false)
     setTargetInput('')
   }, [article?.id])
+
+  // auto-resize textarea to content height
+  useEffect(() => {
+    const ta = bodyRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = `${Math.max(280, ta.scrollHeight)}px`
+  }, [article?.body])
 
   if (!article) {
     return (
@@ -37,21 +47,21 @@ export default function Editor({ article, onChange, saveStatus }: Props) {
   }
 
   async function handleCopy() {
+    const md = getMarkdown(article!)
     try {
-      await navigator.clipboard.writeText(getMarkdown(article!))
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
+      await navigator.clipboard.writeText(md)
     } catch {
-      // fallback: select all text in a temp textarea
       const el = document.createElement('textarea')
-      el.value = getMarkdown(article!)
+      el.value = md
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
       document.body.appendChild(el)
       el.select()
       document.execCommand('copy')
       document.body.removeChild(el)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
     }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   function handleSetTarget(e: React.FormEvent) {
@@ -70,63 +80,61 @@ export default function Editor({ article, onChange, saveStatus }: Props) {
   return (
     <main className="editor">
       <div className="editor-inner">
+
         <div className="editor-toolbar">
-          <div className="toolbar-group">
-            {STATUSES.map(s => (
-              <button
-                key={s}
-                className={`btn-status btn-status--${s}${article.status === s ? ' btn-status--active' : ''}`}
-                onClick={() => update({ status: s })}
-                aria-pressed={article.status === s}
-              >
-                {s}
-              </button>
-            ))}
+          <div className="toolbar-controls">
+            <div className="toolbar-group">
+              {STATUSES.map(s => (
+                <button
+                  key={s}
+                  className={`btn-status btn-status--${s}${article.status === s ? ' btn-status--active' : ''}`}
+                  onClick={() => update({ status: s })}
+                  aria-pressed={article.status === s}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <div className="toolbar-divider" />
+            <select
+              id="mode-select"
+              className="mode-select"
+              value={article.mode}
+              onChange={e => update({ mode: e.target.value as WritingMode })}
+              aria-label="Writing mode"
+            >
+              {MODE_LIST.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="toolbar-divider" />
-
-          <select
-            id="mode-select"
-            className="mode-select"
-            value={article.mode}
-            onChange={e => update({ mode: e.target.value as WritingMode })}
-            aria-label="Writing mode"
-          >
-            {MODE_LIST.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-
-          <div className="toolbar-spacer" />
-
-          {saveStatus !== 'idle' && (
-            <span className={`save-indicator save-indicator--${saveStatus}`} aria-live="polite">
-              {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
+          <div className="toolbar-actions">
+            {saveStatus !== 'idle' && (
+              <span className={`save-indicator save-indicator--${saveStatus}`} aria-live="polite">
+                {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
+              </span>
+            )}
+            <span className="editor-wordcount" aria-live="polite">
+              {words.toLocaleString()}w
             </span>
-          )}
-
-          <span className="editor-wordcount" aria-live="polite">
-            {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
-          </span>
-
-          <button
-            className={`btn-copy${copied ? ' btn-copy--done' : ''}`}
-            onClick={handleCopy}
-            aria-label="Copy as markdown"
-            title="Copy markdown to clipboard"
-          >
-            {copied ? 'Copied!' : 'Copy MD'}
-          </button>
-
-          <button
-            className="btn-export"
-            onClick={() => exportMarkdown(article)}
-            aria-label="Export as markdown file"
-            title="Download as .md file"
-          >
-            Export
-          </button>
+            <button
+              className={`btn-toolbar${copied ? ' btn-toolbar--accent' : ''}`}
+              onClick={handleCopy}
+              aria-label="Copy as markdown"
+              title="Copy markdown to clipboard"
+            >
+              {copied ? 'Copied!' : 'Copy MD'}
+            </button>
+            <button
+              className="btn-toolbar"
+              onClick={() => exportMarkdown(article)}
+              aria-label="Export as markdown file"
+              title="Download as .md file"
+            >
+              Export
+            </button>
+          </div>
         </div>
 
         <input
@@ -146,6 +154,7 @@ export default function Editor({ article, onChange, saveStatus }: Props) {
         />
 
         <textarea
+          ref={bodyRef}
           className="field-body"
           placeholder="Write here…"
           value={article.body}
@@ -169,7 +178,7 @@ export default function Editor({ article, onChange, saveStatus }: Props) {
                   />
                 </div>
                 <span className={`word-target-label${targetMet ? ' word-target-label--met' : ''}`}>
-                  {words.toLocaleString()} / {target.toLocaleString()} words
+                  {words.toLocaleString()} / {target.toLocaleString()}w
                 </span>
                 <button
                   className="btn-target-clear"
@@ -212,6 +221,7 @@ export default function Editor({ article, onChange, saveStatus }: Props) {
             )}
           </div>
         </div>
+
       </div>
     </main>
   )

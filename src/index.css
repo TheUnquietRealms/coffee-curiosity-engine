@@ -50,6 +50,8 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
+  min-width: 0;
 }
 
 .nav-header {
@@ -238,6 +240,8 @@ html, body, #root {
   flex-direction: column;
   overflow-y: auto;
   background: var(--bg);
+  min-height: 0;
+  min-width: 0;
 }
 
 .editor--empty {
@@ -255,24 +259,37 @@ html, body, #root {
   padding: 28px 40px 32px;
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 
 .editor-toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
+  row-gap: 8px;
   margin-bottom: 24px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border);
-  flex-wrap: nowrap;
-  overflow-x: auto;
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .toolbar-group {
   display: flex;
   gap: 3px;
-  flex-shrink: 0;
 }
 
 .toolbar-divider {
@@ -283,17 +300,11 @@ html, body, #root {
   margin: 0 2px;
 }
 
-.toolbar-spacer {
-  flex: 1;
-  min-width: 8px;
-}
-
 .save-indicator {
   font-family: var(--font-ui);
   font-size: 11px;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  flex-shrink: 0;
   transition: opacity 0.3s;
 }
 
@@ -311,11 +322,13 @@ html, body, #root {
   color: var(--text-3);
   letter-spacing: 0.04em;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .mode-select {
-  background: var(--bg-3);
+  background-color: var(--bg-3);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236a6860' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--text-2);
@@ -324,15 +337,12 @@ html, body, #root {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  padding: 4px 8px;
+  padding: 4px 22px 4px 8px;
+  height: 28px;
   outline: none;
   transition: border-color 0.1s, color 0.1s;
   appearance: none;
   -webkit-appearance: none;
-  padding-right: 20px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236a6860' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
 }
 
 .mode-select:hover,
@@ -342,13 +352,8 @@ html, body, #root {
 }
 
 .mode-select option {
-  background: var(--bg-3);
+  background-color: var(--bg-3);
   color: var(--text);
-}
-
-.status-buttons {
-  display: flex;
-  gap: 4px;
 }
 
 .field-title {
@@ -395,9 +400,10 @@ html, body, #root {
   font-size: 18px;
   line-height: 1.8;
   width: 100%;
-  flex: 1;
   resize: none;
-  min-height: 320px;
+  overflow: hidden;
+  min-height: 280px;
+  display: block;
 }
 
 .editor-footer {
@@ -563,6 +569,8 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
+  min-width: 0;
 }
 
 .right-tabs {
@@ -866,21 +874,24 @@ html, body, #root {
 .btn-status {
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: 3px;
   color: var(--text-3);
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  padding: 4px 9px;
+  padding: 0 10px;
+  height: 28px;
   text-transform: uppercase;
-  transition: all 0.12s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
 }
 
 .btn-status:hover {
   background: var(--bg-3);
   color: var(--text-2);
+  border-color: var(--border-2);
 }
 
 .btn-status--active {
@@ -890,19 +901,22 @@ html, body, #root {
 .btn-status--draft.btn-status--active {
   background: #2d3748;
   color: #a0aec0;
+  border-color: #2d3748;
 }
 
 .btn-status--review.btn-status--active {
   background: #744210;
   color: #f6ad55;
+  border-color: #744210;
 }
 
 .btn-status--published.btn-status--active {
   background: #276749;
   color: #68d391;
+  border-color: #276749;
 }
 
-.btn-copy {
+.btn-toolbar {
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 3px;
@@ -912,45 +926,22 @@ html, body, #root {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  padding: 4px 9px;
+  padding: 0 10px;
+  height: 28px;
   text-transform: uppercase;
-  transition: all 0.1s;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
-.btn-copy:hover {
+.btn-toolbar:hover {
   background: var(--bg-3);
   border-color: var(--border-2);
   color: var(--text);
 }
 
-.btn-copy--done {
+.btn-toolbar--accent {
   border-color: var(--accent-dim);
   color: var(--accent);
-}
-
-.btn-export {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  color: var(--text-3);
-  cursor: pointer;
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 4px 9px;
-  text-transform: uppercase;
-  transition: all 0.1s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.btn-export:hover {
-  background: var(--bg-3);
-  border-color: var(--border-2);
-  color: var(--text);
 }
 
 .btn-review {
