@@ -1,0 +1,58 @@
+body {
+  margin: 0;
+  background: #0f1115;
+  color: #e5e7eb;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  height: 100vh;
+}
+
+.panel {
+  padding: 20px;
+  border-color: #27272a;
+}
+
+.left {
+  border-right: 1px solid #27272a;
+}
+
+.right {
+  border-left: 1px solid #27272a;
+}
+
+textarea,
+input {
+  width: 100%;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #fafafa;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  background: #27272a;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.score {
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.eyebrow {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  font-size: 12px;
+}
