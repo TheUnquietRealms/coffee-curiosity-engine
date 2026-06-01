@@ -1,4 +1,5 @@
-import type { Article, Codex } from '../types'
+import type { Article, Codex, WritingMode } from '../types'
+import { DEFAULT_MODE } from './modes'
 
 const ARTICLES_KEY = 'cce_articles'
 const SELECTED_KEY = 'cce_selected'
@@ -17,6 +18,7 @@ export const DEFAULT_ARTICLE: Omit<Article, 'id'> = {
   subtitle: 'Where everything begins and nothing is wasted',
   body: 'Start writing here. This is your private thinking space.\n\nUse the Codex panel on the right to record your voice rules and banned habits. Run a review when you\'re ready to test your draft against editorial standards.\n\nNo one is watching. Write the true version first.',
   status: 'draft',
+  mode: DEFAULT_MODE,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 }
@@ -29,7 +31,8 @@ export function loadArticles(): Article[] {
   try {
     const raw = localStorage.getItem(ARTICLES_KEY)
     if (!raw) return []
-    return JSON.parse(raw) as Article[]
+    const stored = JSON.parse(raw) as Array<Omit<Article, 'mode'> & { mode?: WritingMode }>
+    return stored.map(a => ({ ...a, mode: a.mode ?? DEFAULT_MODE }))
   } catch {
     return []
   }

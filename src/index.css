@@ -183,17 +183,61 @@ html, body, #root {
 
 .editor-toolbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
 
+.editor-toolbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .editor-status-row {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.editor-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-select {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  outline: none;
+  transition: border-color 0.1s, color 0.1s;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236a6860' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+
+.mode-select:hover,
+.mode-select:focus {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+.mode-select option {
+  background: var(--bg-3);
+  color: var(--text);
 }
 
 .status-buttons {
@@ -362,6 +406,54 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.review-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.review-mode-badge {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: 2px;
+  padding: 2px 7px;
+}
+
+.review-editorial-tip {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-3);
+  line-height: 1.5;
+  border-left: 2px solid var(--accent-dim);
+  padding-left: 8px;
+}
+
+.review-editorial-note {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-2);
+  line-height: 1.5;
+  background: var(--bg-3);
+  border-radius: 3px;
+  padding: 8px 10px;
+}
+
+.review-stale-warning {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-dim) 40%, transparent);
+  border-radius: 3px;
+  padding: 6px 8px;
 }
 
 .review-hint {

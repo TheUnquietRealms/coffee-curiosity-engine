@@ -1,5 +1,6 @@
-import type { Article, ArticleStatus } from '../types'
+import type { Article, ArticleStatus, WritingMode } from '../types'
 import { exportMarkdown } from '../lib/storage'
+import { MODE_LIST } from '../lib/modes'
 
 interface Props {
   article: Article | null
@@ -25,18 +26,33 @@ export default function Editor({ article, onChange }: Props) {
   return (
     <main className="editor">
       <div className="editor-toolbar">
-        <div className="editor-status-row">
-          <label className="field-label">Status</label>
-          <div className="status-buttons">
-            {STATUSES.map(s => (
-              <button
-                key={s}
-                className={`btn-status${article.status === s ? ' btn-status--active' : ''}`}
-                onClick={() => update({ status: s })}
-              >
-                {s}
-              </button>
-            ))}
+        <div className="editor-toolbar-left">
+          <div className="editor-status-row">
+            <label className="field-label">Status</label>
+            <div className="status-buttons">
+              {STATUSES.map(s => (
+                <button
+                  key={s}
+                  className={`btn-status${article.status === s ? ' btn-status--active' : ''}`}
+                  onClick={() => update({ status: s })}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="editor-mode-row">
+            <label className="field-label" htmlFor="mode-select">Mode</label>
+            <select
+              id="mode-select"
+              className="mode-select"
+              value={article.mode}
+              onChange={e => update({ mode: e.target.value as WritingMode })}
+            >
+              {MODE_LIST.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
           </div>
         </div>
         <button className="btn-export" onClick={() => exportMarkdown(article)}>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Article, Codex, ReviewResult } from '../types'
 import { runReview } from '../lib/review'
+import { MODES } from '../lib/modes'
 
 interface Props {
   article: Article | null
@@ -21,15 +22,31 @@ function ScoreBar({ score }: { score: number }) {
 
 export default function ReviewPanel({ article, codex }: Props) {
   const [result, setResult] = useState<ReviewResult | null>(null)
+  const [reviewedMode, setReviewedMode] = useState<string | null>(null)
 
   function handleRun() {
     if (!article) return
-    setResult(runReview(article, codex))
+    const r = runReview(article, codex)
+    setResult(r)
+    setReviewedMode(article.mode)
   }
+
+  const currentMode = article?.mode ?? 'essay'
+  const modeConfig = MODES[currentMode]
+  const modeChanged = result && reviewedMode !== currentMode
 
   return (
     <section className="review-panel">
-      <h2 className="panel-title">Editorial Review</h2>
+      <div className="review-panel-header">
+        <h2 className="panel-title">Editorial Review</h2>
+        {article && (
+          <span className="review-mode-badge">{modeConfig.label}</span>
+        )}
+      </div>
+
+      {article && (
+        <p className="review-editorial-tip">{modeConfig.editorialTip}</p>
+      )}
 
       <button
         className="btn-review"
@@ -39,6 +56,10 @@ export default function ReviewPanel({ article, codex }: Props) {
         Run Review
       </button>
 
+      {modeChanged && (
+        <p className="review-stale-warning">Mode changed — re-run for updated results.</p>
+      )}
+
       {result && (
         <div className="review-results">
           <div className="review-overall">
@@ -47,6 +68,10 @@ export default function ReviewPanel({ article, codex }: Props) {
           </div>
           <ScoreBar score={result.overall} />
           <p className="review-summary">{result.summary}</p>
+
+          {result.editorialNote && (
+            <p className="review-editorial-note">{result.editorialNote}</p>
+          )}
 
           <div className="review-categories">
             {result.scores.map(s => (

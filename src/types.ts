@@ -1,11 +1,16 @@
 export type ArticleStatus = 'draft' | 'review' | 'published'
 
+export type WritingMode =
+  | 'essay' | 'fiction' | 'technical' | 'journal'
+  | 'email' | 'linkedin' | 'medium' | 'substack' | 'github-docs'
+
 export interface Article {
   id: string
   title: string
   subtitle: string
   body: string
   status: ArticleStatus
+  mode: WritingMode
   createdAt: number
   updatedAt: number
 }
@@ -28,4 +33,5 @@ export interface ReviewResult {
   scores: ReviewScore[]
   overall: number
   summary: string
+  editorialNote: string
 }
