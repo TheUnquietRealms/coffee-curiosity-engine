@@ -11,6 +11,7 @@ export interface Article {
   body: string
   status: ArticleStatus
   mode: WritingMode
+  wordTarget?: number
   createdAt: number
   updatedAt: number
 }

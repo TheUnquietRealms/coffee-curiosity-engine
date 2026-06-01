@@ -74,13 +74,17 @@ export function createArticle(partial: Partial<Omit<Article, 'id'>> = {}): Artic
   }
 }
 
-export function exportMarkdown(article: Article): void {
+export function getMarkdown(article: Article): string {
   const lines: string[] = []
   if (article.title) lines.push(`# ${article.title}`)
   if (article.subtitle) lines.push(`\n*${article.subtitle}*`)
   lines.push('')
   lines.push(article.body)
-  const md = lines.join('\n')
+  return lines.join('\n')
+}
+
+export function exportMarkdown(article: Article): void {
+  const md = getMarkdown(article)
   const blob = new Blob([md], { type: 'text/markdown' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

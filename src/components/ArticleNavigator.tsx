@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { Article } from '../types'
 import { createArticle } from '../lib/storage'
+import { MODES } from '../lib/modes'
+import { countWords, relativeTime } from '../lib/utils'
 
 interface Props {
   articles: Article[]
@@ -12,12 +14,14 @@ interface Props {
 export default function ArticleNavigator({ articles, selectedId, onSelect, onUpdate }: Props) {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+  const [filter, setFilter] = useState('')
 
   function handleNew() {
     const article = createArticle({ title: 'Untitled' })
     const updated = [...articles, article]
     onUpdate(updated)
     onSelect(article.id)
+    setFilter('')
   }
 
   function handleDelete(id: string) {
@@ -44,7 +48,9 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
     setRenamingId(null)
   }
 
-  const sorted = [...articles].sort((a, b) => b.updatedAt - a.updatedAt)
+  const sorted = [...articles]
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .filter(a => !filter || a.title.toLowerCase().includes(filter.toLowerCase()))
 
   return (
     <aside className="navigator">
@@ -54,6 +60,26 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
           + New
         </button>
       </header>
+
+      <div className="nav-search-wrap">
+        <input
+          className="nav-search"
+          placeholder="Filter…"
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          aria-label="Filter articles"
+        />
+        {filter && (
+          <button
+            className="nav-search-clear"
+            onClick={() => setFilter('')}
+            aria-label="Clear filter"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
       <ul className="nav-list">
         {sorted.map(article => (
           <li
@@ -80,6 +106,13 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
                   <span className="nav-item-title">{article.title || 'Untitled'}</span>
                   <span className={`nav-status nav-status--${article.status}`}>{article.status}</span>
                 </div>
+                <div className="nav-item-meta">
+                  <span>{MODES[article.mode]?.label ?? 'Essay'}</span>
+                  <span className="nav-meta-sep">·</span>
+                  <span>{countWords(article.body).toLocaleString()}w</span>
+                  <span className="nav-meta-sep">·</span>
+                  <span>{relativeTime(article.updatedAt)}</span>
+                </div>
                 <div className="nav-actions" onClick={e => e.stopPropagation()}>
                   <button
                     className="btn-nav-action"
@@ -102,8 +135,13 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
             )}
           </li>
         ))}
+
         {articles.length === 0 && (
           <li className="nav-empty">No articles yet. Press + New to begin.</li>
+        )}
+
+        {articles.length > 0 && sorted.length === 0 && (
+          <li className="nav-empty">No match for "{filter}".</li>
         )}
       </ul>
     </aside>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import type { Article, Codex } from './types'
 import {
   loadArticles, saveArticles,
@@ -12,11 +12,18 @@ import Editor from './components/Editor'
 import CodexPanel from './components/CodexPanel'
 import ReviewPanel from './components/ReviewPanel'
 
+export type SaveStatus = 'idle' | 'saving' | 'saved'
+
 export default function App() {
   const [articles, setArticles] = useState<Article[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [codex, setCodex] = useState<Codex>(DEFAULT_CODEX)
   const [rightTab, setRightTab] = useState<'codex' | 'review'>('codex')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingRef = useRef<Article[]>([])
 
   useEffect(() => {
     let loaded = loadArticles()
@@ -37,10 +44,12 @@ export default function App() {
 
     setArticles(loaded)
     setCodex(savedCodex)
+    pendingRef.current = loaded
   }, [])
 
   const handleArticlesUpdate = useCallback((updated: Article[]) => {
     setArticles(updated)
+    pendingRef.current = updated
     saveArticles(updated)
   }, [])
 
@@ -52,9 +61,19 @@ export default function App() {
   const handleArticleChange = useCallback((article: Article) => {
     setArticles(prev => {
       const updated = prev.map(a => a.id === article.id ? article : a)
-      saveArticles(updated)
+      pendingRef.current = updated
       return updated
     })
+
+    setSaveStatus('saving')
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current)
+
+    saveTimerRef.current = setTimeout(() => {
+      saveArticles(pendingRef.current)
+      setSaveStatus('saved')
+      fadeTimerRef.current = setTimeout(() => setSaveStatus('idle'), 1500)
+    }, 400)
   }, [])
 
   const handleCodexChange = useCallback((updated: Codex) => {
@@ -72,7 +91,11 @@ export default function App() {
         onSelect={handleSelect}
         onUpdate={handleArticlesUpdate}
       />
-      <Editor article={selected} onChange={handleArticleChange} />
+      <Editor
+        article={selected}
+        onChange={handleArticleChange}
+        saveStatus={saveStatus}
+      />
       <div className="right-panel">
         <div className="right-tabs">
           <button
