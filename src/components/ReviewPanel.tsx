@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Article, Codex, ReviewResult } from '../types'
 import { runReview } from '../lib/review'
 import { MODES } from '../lib/modes'
@@ -11,7 +11,7 @@ interface Props {
 function ScoreBar({ score }: { score: number }) {
   const color = score >= 75 ? '#5a8a5a' : score >= 50 ? '#8a7a3a' : '#8a3a3a'
   return (
-    <div className="score-bar-track">
+    <div className="score-bar-track" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
       <div
         className="score-bar-fill"
         style={{ width: `${score}%`, backgroundColor: color }}
@@ -23,6 +23,12 @@ function ScoreBar({ score }: { score: number }) {
 export default function ReviewPanel({ article, codex }: Props) {
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [reviewedMode, setReviewedMode] = useState<string | null>(null)
+
+  // clear stale results when a different article is selected
+  useEffect(() => {
+    setResult(null)
+    setReviewedMode(null)
+  }, [article?.id])
 
   function handleRun() {
     if (!article) return
@@ -52,6 +58,7 @@ export default function ReviewPanel({ article, codex }: Props) {
         className="btn-review"
         onClick={handleRun}
         disabled={!article}
+        aria-label="Run editorial review"
       >
         Run Review
       </button>

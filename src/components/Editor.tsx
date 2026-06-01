@@ -9,11 +9,15 @@ interface Props {
 
 const STATUSES: ArticleStatus[] = ['draft', 'review', 'published']
 
+function wordCount(text: string): number {
+  return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0
+}
+
 export default function Editor({ article, onChange }: Props) {
   if (!article) {
     return (
       <main className="editor editor--empty">
-        <p>No article selected. Create one in the navigator.</p>
+        <p>No article selected. Press <strong>+ New</strong> in the navigator to begin.</p>
       </main>
     )
   }
@@ -22,6 +26,8 @@ export default function Editor({ article, onChange }: Props) {
     if (!article) return
     onChange({ ...article, ...patch, updatedAt: Date.now() })
   }
+
+  const words = wordCount(article.body)
 
   return (
     <main className="editor">
@@ -33,8 +39,9 @@ export default function Editor({ article, onChange }: Props) {
               {STATUSES.map(s => (
                 <button
                   key={s}
-                  className={`btn-status${article.status === s ? ' btn-status--active' : ''}`}
+                  className={`btn-status btn-status--${s}${article.status === s ? ' btn-status--active' : ''}`}
                   onClick={() => update({ status: s })}
+                  aria-pressed={article.status === s}
                 >
                   {s}
                 </button>
@@ -55,9 +62,14 @@ export default function Editor({ article, onChange }: Props) {
             </select>
           </div>
         </div>
-        <button className="btn-export" onClick={() => exportMarkdown(article)}>
-          Export MD
-        </button>
+        <div className="editor-toolbar-right">
+          <span className="editor-wordcount" aria-live="polite">
+            {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
+          </span>
+          <button className="btn-export" onClick={() => exportMarkdown(article)}>
+            Export MD
+          </button>
+        </div>
       </div>
 
       <input
@@ -65,6 +77,7 @@ export default function Editor({ article, onChange }: Props) {
         placeholder="Title"
         value={article.title}
         onChange={e => update({ title: e.target.value })}
+        aria-label="Article title"
       />
 
       <input
@@ -72,6 +85,7 @@ export default function Editor({ article, onChange }: Props) {
         placeholder="Subtitle"
         value={article.subtitle}
         onChange={e => update({ subtitle: e.target.value })}
+        aria-label="Article subtitle"
       />
 
       <textarea
@@ -79,6 +93,7 @@ export default function Editor({ article, onChange }: Props) {
         placeholder="Write here..."
         value={article.body}
         onChange={e => update({ body: e.target.value })}
+        aria-label="Article body"
       />
     </main>
   )
