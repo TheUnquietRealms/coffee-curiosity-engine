@@ -8,14 +8,14 @@ interface Props {
   codex: Codex
 }
 
+function scoreColor(score: number): string {
+  return score >= 75 ? '#16A34A' : score >= 50 ? '#B45309' : '#DC2626'
+}
+
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 75 ? '#5a8a5a' : score >= 50 ? '#8a7a3a' : '#8a3a3a'
   return (
     <div className="score-bar-track" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
-      <div
-        className="score-bar-fill"
-        style={{ width: `${score}%`, backgroundColor: color }}
-      />
+      <div className="score-bar-fill" style={{ width: `${score}%`, backgroundColor: scoreColor(score) }} />
     </div>
   )
 }
@@ -70,11 +70,29 @@ export default function ReviewPanel({ article, codex }: Props) {
       {result && (
         <div className="review-results">
           <div className="review-overall">
-            <span className="review-overall-label">Overall</span>
-            <span className="review-overall-score">{result.overall}</span>
+            <div className="score-ring-wrap" aria-label={`Overall score ${result.overall}`}>
+              <svg width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" strokeWidth="6" />
+                <circle
+                  cx="32" cy="32" r="26"
+                  fill="none"
+                  stroke={scoreColor(result.overall)}
+                  strokeWidth="6"
+                  strokeDasharray={`${(result.overall / 100) * 163.4} 163.4`}
+                  strokeDashoffset="40.85"
+                  strokeLinecap="round"
+                  transform="rotate(-90 32 32)"
+                />
+              </svg>
+              <span className="score-ring-number" style={{ color: scoreColor(result.overall) }}>
+                {result.overall}
+              </span>
+            </div>
+            <div className="review-overall-meta">
+              <span className="review-overall-label">Overall</span>
+              <p className="review-summary">{result.summary}</p>
+            </div>
           </div>
-          <ScoreBar score={result.overall} />
-          <p className="review-summary">{result.summary}</p>
 
           {result.editorialNote && (
             <p className="review-editorial-note">{result.editorialNote}</p>
