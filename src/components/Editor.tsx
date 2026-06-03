@@ -26,10 +26,13 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
   const [tagInput, setTagInput] = useState('')
   const [addingTag, setAddingTag] = useState(false)
 
-  // reset target form when switching articles
+  // reset target form + outline state when switching articles
   useEffect(() => {
     setSettingTarget(false)
     setTargetInput('')
+    setOutlineOpen(Boolean(article?.outline))
+    setAddingTag(false)
+    setTagInput('')
   }, [article?.id])
 
   // auto-resize textarea to content height
@@ -226,7 +229,8 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
                 onChange={e => setTagInput(e.target.value)}
                 placeholder="tag name"
                 autoFocus
-                onBlur={() => { setAddingTag(false); setTagInput('') }}
+                onKeyDown={e => { if (e.key === 'Escape') { setAddingTag(false); setTagInput('') } }}
+                onBlur={e => { if (!e.currentTarget.form?.contains(e.relatedTarget as Node)) { setAddingTag(false); setTagInput('') } }}
               />
             </form>
           ) : (
