@@ -1,4 +1,6 @@
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent'
+const MODEL = 'gemini-2.0-flash'
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
+const GEMINI_URL = `${BASE_URL}/${MODEL}:streamGenerateContent`
 
 export interface GeminiContext {
   mode: string
@@ -33,7 +35,7 @@ export async function* streamGemini(
     }),
   })
 
-  if (res.status === 401) throw new Error('INVALID_KEY')
+  if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('INVALID_KEY')
   if (res.status === 429) throw new Error('RATE_LIMIT')
   if (!res.ok) throw new Error(`Gemini error: ${res.status}`)
 
@@ -70,11 +72,15 @@ export function saveGeminiKey(key: string): void {
 
 export async function validateGeminiKey(key: string): Promise<boolean> {
   try {
-    const gen = streamGemini(key, {
-      mode: 'test', voiceRules: '', bannedHabits: '', bodySample: '', title: 'test',
-    }, 'Say "ok"', 5)
-    await gen.next()
-    return true
+    const res = await fetch(`${BASE_URL}/${MODEL}:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'Hi' }] }],
+        generationConfig: { maxOutputTokens: 1 },
+      }),
+    })
+    return res.ok
   } catch {
     return false
   }
