@@ -12,6 +12,7 @@ export interface Article {
   body: string
   outline: string
   tags: string[]
+  project: string
   status: ArticleStatus
   mode: WritingMode
   wordTarget?: number

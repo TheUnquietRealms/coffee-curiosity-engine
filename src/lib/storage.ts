@@ -19,6 +19,7 @@ export const DEFAULT_ARTICLE: Omit<Article, 'id'> = {
   body: 'Start writing here. This is your private thinking space.\n\nUse the Codex panel on the right to record your voice rules and banned habits. Run a review when you\'re ready to test your draft against editorial standards.\n\nNo one is watching. Write the true version first.',
   outline: '',
   tags: [],
+  project: '',
   status: 'draft',
   mode: DEFAULT_MODE,
   createdAt: Date.now(),
@@ -39,6 +40,7 @@ export function loadArticles(): Article[] {
       mode: a.mode ?? DEFAULT_MODE,
       outline: (a as any).outline ?? '',
       tags: (a as any).tags ?? [],
+      project: (a as any).project ?? '',
     }))
   } catch {
     return []
