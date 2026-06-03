@@ -9,6 +9,8 @@ export interface Article {
   title: string
   subtitle: string
   body: string
+  outline: string
+  tags: string[]
   status: ArticleStatus
   mode: WritingMode
   wordTarget?: number

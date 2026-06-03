@@ -17,6 +17,8 @@ export const DEFAULT_ARTICLE: Omit<Article, 'id'> = {
   title: 'The First Draft',
   subtitle: 'Where everything begins and nothing is wasted',
   body: 'Start writing here. This is your private thinking space.\n\nUse the Codex panel on the right to record your voice rules and banned habits. Run a review when you\'re ready to test your draft against editorial standards.\n\nNo one is watching. Write the true version first.',
+  outline: '',
+  tags: [],
   status: 'draft',
   mode: DEFAULT_MODE,
   createdAt: Date.now(),
@@ -32,7 +34,12 @@ export function loadArticles(): Article[] {
     const raw = localStorage.getItem(ARTICLES_KEY)
     if (!raw) return []
     const stored = JSON.parse(raw) as Array<Omit<Article, 'mode'> & { mode?: WritingMode }>
-    return stored.map(a => ({ ...a, mode: a.mode ?? DEFAULT_MODE }))
+    return stored.map(a => ({
+      ...a,
+      mode: a.mode ?? DEFAULT_MODE,
+      outline: (a as any).outline ?? '',
+      tags: (a as any).tags ?? [],
+    }))
   } catch {
     return []
   }

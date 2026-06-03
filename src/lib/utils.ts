@@ -2,6 +2,10 @@ export function countWords(text: string): number {
   return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0
 }
 
+export function readingTime(text: string): number {
+  return Math.max(1, Math.ceil(countWords(text) / 220))
+}
+
 export function relativeTime(ts: number): string {
   const diff = Date.now() - ts
   const mins = Math.floor(diff / 60000)
