@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { Article, ArticleStatus, WritingMode } from '../types'
 import { exportMarkdown, getMarkdown } from '../lib/storage'
 import { MODE_LIST } from '../lib/modes'
-import { countWords, relativeTime } from '../lib/utils'
+import { countWords, relativeTime, readingTime } from '../lib/utils'
 import type { SaveStatus } from '../App'
 
 interface Props {
@@ -22,6 +22,9 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
   const [settingTarget, setSettingTarget] = useState(false)
   const [targetInput, setTargetInput] = useState('')
   const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const [outlineOpen, setOutlineOpen] = useState(() => Boolean(article?.outline))
+  const [tagInput, setTagInput] = useState('')
+  const [addingTag, setAddingTag] = useState(false)
 
   // reset target form when switching articles
   useEffect(() => {
@@ -76,6 +79,20 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
     setTargetInput('')
   }
 
+  function handleAddTag(e: React.FormEvent) {
+    e.preventDefault()
+    const val = tagInput.trim().toLowerCase().replace(/\s+/g, '-')
+    if (!val || !article) return
+    if (!article.tags.includes(val)) update({ tags: [...article.tags, val] })
+    setTagInput('')
+    setAddingTag(false)
+  }
+
+  function handleRemoveTag(tag: string) {
+    if (!article) return
+    update({ tags: article.tags.filter(t => t !== tag) })
+  }
+
   const words = countWords(article.body)
   const target = article.wordTarget
   const targetPct = target ? Math.min(100, Math.round((words / target) * 100)) : null
@@ -119,6 +136,7 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
                 {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
               </span>
             )}
+            <span className="editor-readtime">{readingTime(article.body)} min</span>
             <span className="editor-wordcount" aria-live="polite">
               {words.toLocaleString()}w
             </span>
@@ -157,6 +175,26 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
           </div>
         </div>
 
+        <div className="outline-section">
+          <button
+            className="outline-toggle"
+            onClick={() => setOutlineOpen(o => !o)}
+            aria-expanded={outlineOpen}
+          >
+            <span className="outline-chevron">{outlineOpen ? '▾' : '▸'}</span>
+            Outline / Notes
+          </button>
+          {outlineOpen && (
+            <textarea
+              className="outline-body"
+              placeholder="Plan your structure here. Excluded from word count and exports."
+              value={article.outline}
+              onChange={e => update({ outline: e.target.value })}
+              rows={4}
+            />
+          )}
+        </div>
+
         <input
           className="field-title"
           placeholder="Title"
@@ -172,6 +210,29 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
           onChange={e => update({ subtitle: e.target.value })}
           aria-label="Article subtitle"
         />
+
+        <div className="tag-row">
+          {article.tags.map(tag => (
+            <span key={tag} className="tag-pill">
+              #{tag}
+              <button className="tag-pill-remove" onClick={() => handleRemoveTag(tag)} aria-label={`Remove tag ${tag}`}>×</button>
+            </span>
+          ))}
+          {addingTag ? (
+            <form className="tag-form" onSubmit={handleAddTag}>
+              <input
+                className="tag-input"
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                placeholder="tag name"
+                autoFocus
+                onBlur={() => { setAddingTag(false); setTagInput('') }}
+              />
+            </form>
+          ) : (
+            <button className="tag-add-btn" onClick={() => setAddingTag(true)}>+ tag</button>
+          )}
+        </div>
 
         <textarea
           ref={bodyRef}
