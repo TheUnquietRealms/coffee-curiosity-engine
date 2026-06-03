@@ -3,6 +3,7 @@ export type ArticleStatus = 'draft' | 'review' | 'published'
 export type WritingMode =
   | 'essay' | 'fiction' | 'technical' | 'journal'
   | 'email' | 'linkedin' | 'medium' | 'substack' | 'github-docs'
+  | 'poem' | 'book-chapter' | 'research' | 'screenplay' | 'blog'
 
 export interface Article {
   id: string

@@ -113,6 +113,46 @@ export const MODES: Record<WritingMode, ModeConfig> = {
     reviewCategories: ['Argument Clarity', 'Evidence Discipline', 'Title Quality', 'Banned Phrases', 'Anti-LLM Smell', 'Draft Maturity'],
     subtitleExpected: false,
   },
+  poem: {
+    label: 'Poem',
+    idealWordRange: [10, 200],
+    bannedPhrases: ['like a', 'as if', 'suddenly', 'very', 'really', 'beautiful', 'amazing', 'wonderful'],
+    editorialTip: 'Every word earns its place. Cut until it hurts, then cut again.',
+    reviewCategories: ['Voice Authenticity', 'Paragraph Rhythm', 'Banned Phrases', 'Draft Maturity'],
+    subtitleExpected: false,
+  },
+  'book-chapter': {
+    label: 'Book Chapter',
+    idealWordRange: [1000, 6000],
+    bannedPhrases: ['suddenly', 'he felt', 'she felt', 'they felt', 'little did he know', 'little did she know', 'tears streamed down', 'her heart raced', 'needless to say'],
+    editorialTip: 'Each chapter must move something — plot, character, or world. If nothing shifts, cut it.',
+    reviewCategories: ['Voice Authenticity', 'Paragraph Rhythm', 'Banned Phrases', 'Anti-LLM Smell', 'Draft Maturity'],
+    subtitleExpected: true,
+  },
+  research: {
+    label: 'Research Paper',
+    idealWordRange: [2000, 8000],
+    bannedPhrases: ['it is clear that', 'obviously', 'needless to say', 'simply', 'of course', 'as we can see', 'in conclusion', 'to summarize'],
+    editorialTip: 'State your claim, show your evidence, address the counterargument. In that order, every time.',
+    reviewCategories: ['Argument Clarity', 'Evidence Discipline', 'Title Quality', 'Banned Phrases', 'Anti-LLM Smell', 'Draft Maturity'],
+    subtitleExpected: true,
+  },
+  screenplay: {
+    label: 'Screenplay',
+    idealWordRange: [500, 4000],
+    bannedPhrases: ['suddenly', 'very', 'really', 'quickly', 'he thought', 'she thought', 'we see', 'it is revealed'],
+    editorialTip: 'If it cannot be filmed, it cannot be in the script. Show action, not interiority.',
+    reviewCategories: ['Voice Authenticity', 'Paragraph Rhythm', 'Banned Phrases', 'Draft Maturity'],
+    subtitleExpected: false,
+  },
+  blog: {
+    label: 'Blog Post',
+    idealWordRange: [400, 1500],
+    bannedPhrases: ['in this post', 'in this article', 'we will explore', 'we will discuss', 'hot take', 'unpopular opinion', 'you need to know', 'game changer', 'thought leader'],
+    editorialTip: 'Lead with the payoff. Your reader decided in the first sentence whether to stay.',
+    reviewCategories: ['Voice Authenticity', 'Argument Clarity', 'Title Quality', 'Banned Phrases', 'Anti-LLM Smell', 'Draft Maturity'],
+    subtitleExpected: true,
+  },
 }
 
 export const DEFAULT_MODE: WritingMode = 'essay'
@@ -127,4 +167,9 @@ export const MODE_LIST: { value: WritingMode; label: string }[] = [
   { value: 'medium', label: 'Medium' },
   { value: 'substack', label: 'Substack' },
   { value: 'github-docs', label: 'GitHub Docs' },
+  { value: 'poem', label: 'Poem' },
+  { value: 'book-chapter', label: 'Book Chapter' },
+  { value: 'research', label: 'Research Paper' },
+  { value: 'screenplay', label: 'Screenplay' },
+  { value: 'blog', label: 'Blog Post' },
 ]
