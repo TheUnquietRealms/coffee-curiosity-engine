@@ -9,9 +9,10 @@ interface Props {
   selectedId: string | null
   onSelect: (id: string) => void
   onUpdate: (articles: Article[]) => void
+  onOpenSettings: () => void
 }
 
-export default function ArticleNavigator({ articles, selectedId, onSelect, onUpdate }: Props) {
+export default function ArticleNavigator({ articles, selectedId, onSelect, onUpdate, onOpenSettings }: Props) {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [filter, setFilter] = useState('')
@@ -206,6 +207,9 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
       <footer className="nav-footer">
         <button className="btn-new-full" onClick={handleNew} aria-label="New article">
           + New Article
+        </button>
+        <button className="btn-settings-gear" onClick={onOpenSettings} title="Settings" aria-label="Open settings">
+          ⚙
         </button>
       </footer>
     </aside>

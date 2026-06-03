@@ -9,11 +9,14 @@ import {
 import { DEFAULT_CODEX } from './lib/storage'
 import { checkGrammar } from './lib/languageTool'
 import type { LTMatch } from './lib/languageTool'
+import { loadGeminiKey } from './lib/gemini'
 import ArticleNavigator from './components/ArticleNavigator'
 import Editor from './components/Editor'
 import CodexPanel from './components/CodexPanel'
 import ReviewPanel from './components/ReviewPanel'
 import GrammarPanel from './components/GrammarPanel'
+import SettingsPanel from './components/SettingsPanel'
+import AIPanel from './components/AIPanel'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved'
 
@@ -21,7 +24,9 @@ export default function App() {
   const [articles, setArticles] = useState<Article[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [codex, setCodex] = useState<Codex>(DEFAULT_CODEX)
-  const [rightTab, setRightTab] = useState<'codex' | 'review' | 'grammar'>('codex')
+  const [rightTab, setRightTab] = useState<'codex' | 'review' | 'grammar' | 'ai'>('codex')
+  const [showSettings, setShowSettings] = useState(false)
+  const [geminiKey, setGeminiKey] = useState(() => loadGeminiKey())
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [focusMode, setFocusMode] = useState(false)
   const [grammarMatches, setGrammarMatches] = useState<LTMatch[]>([])
@@ -126,6 +131,16 @@ export default function App() {
     setGrammarMatches(prev => prev.filter(m => m !== match))
   }, [selected, handleArticleChange])
 
+  const handleAppendToBody = useCallback((text: string) => {
+    if (!selected) return
+    handleArticleChange({ ...selected, body: selected.body + text })
+  }, [selected, handleArticleChange])
+
+  const handleSetOutline = useCallback((text: string) => {
+    if (!selected) return
+    handleArticleChange({ ...selected, outline: text })
+  }, [selected, handleArticleChange])
+
   function startTimer() {
     if (Notification.permission === 'default') Notification.requestPermission()
     setTimerSeconds(25 * 60)
@@ -165,12 +180,20 @@ export default function App() {
 
   return (
     <div className={`app-shell${focusMode ? ' app-shell--focus' : ''}`}>
-      <ArticleNavigator
-        articles={articles}
-        selectedId={selectedId}
-        onSelect={handleSelect}
-        onUpdate={handleArticlesUpdate}
-      />
+      {showSettings
+        ? <SettingsPanel
+            currentKey={geminiKey}
+            onSave={setGeminiKey}
+            onClose={() => setShowSettings(false)}
+          />
+        : <ArticleNavigator
+            articles={articles}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+            onUpdate={handleArticlesUpdate}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+      }
       <Editor
         article={selected}
         onChange={handleArticleChange}
@@ -206,8 +229,22 @@ export default function App() {
           >
             Grammar
           </button>
+          <button
+            className={`tab-btn${rightTab === 'ai' ? ' tab-btn--active' : ''}`}
+            onClick={() => setRightTab('ai')}
+          >
+            AI
+          </button>
         </div>
-        {rightTab === 'grammar'
+        {rightTab === 'ai'
+          ? <AIPanel
+              article={selected}
+              codex={codex}
+              geminiKey={geminiKey}
+              onAppendToBody={handleAppendToBody}
+              onSetOutline={handleSetOutline}
+            />
+          : rightTab === 'grammar'
           ? <GrammarPanel matches={grammarMatches} article={selected} onApply={handleApplyReplacement} loading={grammarLoading} error={grammarError} />
           : rightTab === 'codex'
           ? <CodexPanel codex={codex} onChange={handleCodexChange} />
