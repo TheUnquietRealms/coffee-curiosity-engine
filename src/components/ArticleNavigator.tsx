@@ -10,9 +10,10 @@ interface Props {
   onSelect: (id: string) => void
   onUpdate: (articles: Article[]) => void
   onOpenSettings: () => void
+  onMobileClose?: () => void
 }
 
-export default function ArticleNavigator({ articles, selectedId, onSelect, onUpdate, onOpenSettings }: Props) {
+export default function ArticleNavigator({ articles, selectedId, onSelect, onUpdate, onOpenSettings, onMobileClose }: Props) {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [filter, setFilter] = useState('')
@@ -168,6 +169,9 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
             <span className="nav-brand-sub">ENGINE</span>
           </div>
         </div>
+        {onMobileClose && (
+          <button className="btn-nav-close" onClick={onMobileClose} aria-label="Close navigation">✕</button>
+        )}
       </header>
 
       <div className="nav-search-wrap">

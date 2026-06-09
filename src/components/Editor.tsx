@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
-import type { Article, ArticleStatus, WritingMode } from '../types'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import type { Article, ArticleStatus, WritingMode, Codex, Snapshot } from '../types'
 import { exportMarkdown, getMarkdown } from '../lib/storage'
 import { exportDocx } from '../lib/export'
 import { MODE_LIST } from '../lib/modes'
+import { TEMPLATES } from '../lib/templates'
 import { countWords, relativeTime, readingTime } from '../lib/utils'
 import type { SaveStatus } from '../App'
 import MarkdownPreview from './MarkdownPreview'
@@ -11,6 +12,13 @@ interface Props {
   article: Article | null
   onChange: (article: Article) => void
   saveStatus: SaveStatus
+  codex?: Codex
+  snapshots?: Snapshot[]
+  onSaveSnapshot?: () => void
+  onRestoreSnapshot?: (body: string) => void
+  onStatusChange?: (status: ArticleStatus) => void
+  onToggleNav?: () => void
+  onToggleRightPanel?: () => void
   focusMode?: boolean
   onToggleFocus?: () => void
   darkMode?: boolean
@@ -23,9 +31,32 @@ interface Props {
   onResetTimer?: () => void
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function buildHighlightHtml(text: string, phrases: string[]): string {
+  if (!phrases.length) return escapeHtml(text)
+  const pattern = new RegExp(
+    `(${phrases.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+    'gi'
+  )
+  const parts: string[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(text)) !== null) {
+    parts.push(escapeHtml(text.slice(lastIndex, match.index)))
+    parts.push(`<mark class="banned-highlight">${escapeHtml(match[0])}</mark>`)
+    lastIndex = match.index + match[0].length
+  }
+  parts.push(escapeHtml(text.slice(lastIndex)))
+  parts.push(' ')
+  return parts.join('')
+}
+
 const STATUSES: ArticleStatus[] = ['draft', 'review', 'published']
 
-export default function Editor({ article, onChange, saveStatus, focusMode, onToggleFocus, darkMode, onToggleDark, onGrammarCheck, grammarCooldown, timerSeconds, timerRunning, onToggleTimer, onResetTimer }: Props) {
+export default function Editor({ article, onChange, saveStatus, codex, snapshots, onSaveSnapshot, onRestoreSnapshot, onStatusChange, onToggleNav, onToggleRightPanel, focusMode, onToggleFocus, darkMode, onToggleDark, onGrammarCheck, grammarCooldown, timerSeconds, timerRunning, onToggleTimer, onResetTimer }: Props) {
   const [copied, setCopied] = useState(false)
   const [settingTarget, setSettingTarget] = useState(false)
   const [targetInput, setTargetInput] = useState('')
@@ -34,8 +65,8 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
   const [tagInput, setTagInput] = useState('')
   const [addingTag, setAddingTag] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
+  const [snapshotsOpen, setSnapshotsOpen] = useState(false)
 
-  // reset target form + outline state when switching articles
   useEffect(() => {
     setSettingTarget(false)
     setTargetInput('')
@@ -43,15 +74,25 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
     setAddingTag(false)
     setTagInput('')
     setPreviewMode(false)
+    setSnapshotsOpen(false)
   }, [article?.id])
 
-  // auto-resize textarea to content height
   useEffect(() => {
     const ta = bodyRef.current
     if (!ta) return
     ta.style.height = 'auto'
     ta.style.height = `${Math.max(280, ta.scrollHeight)}px`
   }, [article?.body])
+
+  const bannedPhrases = useMemo(
+    () => (codex?.bannedHabits ?? '').split('\n').map(s => s.trim()).filter(Boolean),
+    [codex?.bannedHabits]
+  )
+
+  const backdropHtml = useMemo(
+    () => buildHighlightHtml(article?.body ?? '', bannedPhrases),
+    [article?.body, bannedPhrases]
+  )
 
   if (!article) {
     return (
@@ -111,6 +152,18 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
   const targetPct = target ? Math.min(100, Math.round((words / target) * 100)) : null
   const targetMet = target ? words >= target : false
 
+  const bodyTextarea = (
+    <textarea
+      ref={bodyRef}
+      className={`field-body${bannedPhrases.length > 0 ? ' field-body--over-backdrop' : ''}`}
+      placeholder="Write here…"
+      value={article.body}
+      onChange={e => update({ body: e.target.value })}
+      aria-label="Article body"
+      spellCheck
+    />
+  )
+
   return (
     <main className="editor">
       <div className="editor-inner">
@@ -122,7 +175,7 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
                 <button
                   key={s}
                   className={`btn-status btn-status--${s}${article.status === s ? ' btn-status--active' : ''}`}
-                  onClick={() => update({ status: s })}
+                  onClick={() => { update({ status: s }); onStatusChange?.(s) }}
                   aria-pressed={article.status === s}
                 >
                   {s}
@@ -144,6 +197,22 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
           </div>
 
           <div className="toolbar-actions">
+            <button
+              className="btn-focus btn-mobile-nav"
+              onClick={onToggleNav}
+              aria-label="Open navigation"
+              title="Open navigation"
+            >
+              ☰
+            </button>
+            <button
+              className="btn-focus btn-mobile-panels"
+              onClick={onToggleRightPanel}
+              aria-label="Open panels"
+              title="Open panels"
+            >
+              ≡
+            </button>
             {saveStatus !== 'idle' && (
               <span className={`save-indicator save-indicator--${saveStatus}`} aria-live="polite">
                 {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
@@ -191,6 +260,14 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
               title="Download as .docx"
             >
               DOCX
+            </button>
+            <button
+              className="btn-focus"
+              onClick={onSaveSnapshot}
+              title="Save checkpoint (up to 5 kept)"
+              aria-label="Save checkpoint"
+            >
+              📷
             </button>
             <button
               className="btn-focus"
@@ -276,16 +353,64 @@ export default function Editor({ article, onChange, saveStatus, focusMode, onTog
 
         {previewMode
           ? <MarkdownPreview body={article.body} />
-          : <textarea
-              ref={bodyRef}
-              className="field-body"
-              placeholder="Write here…"
-              value={article.body}
-              onChange={e => update({ body: e.target.value })}
-              aria-label="Article body"
-              spellCheck
-            />
+          : bannedPhrases.length > 0
+            ? (
+              <div className="editor-body-wrap">
+                <div
+                  className="field-body-backdrop"
+                  aria-hidden="true"
+                  dangerouslySetInnerHTML={{ __html: backdropHtml }}
+                />
+                {bodyTextarea}
+              </div>
+            )
+            : bodyTextarea
         }
+
+        {!previewMode && article.body === '' && (
+          <button
+            className="btn-template"
+            onClick={() => update({ body: TEMPLATES[article.mode] })}
+          >
+            Use {article.mode} template
+          </button>
+        )}
+
+        {snapshots && snapshots.length > 0 && (
+          <div className="snapshots-section">
+            <button
+              className="snapshots-toggle"
+              onClick={() => setSnapshotsOpen(o => !o)}
+              aria-expanded={snapshotsOpen}
+            >
+              <span className="outline-chevron">{snapshotsOpen ? '▾' : '▸'}</span>
+              Checkpoints ({snapshots.length})
+            </button>
+            {snapshotsOpen && (
+              <ul className="snapshots-list">
+                {snapshots.map((s, i) => (
+                  <li key={s.ts} className="snapshot-item">
+                    <div className="snapshot-meta">
+                      <span className="snapshot-index">#{snapshots.length - i}</span>
+                      <span className="snapshot-time">{relativeTime(s.ts)}</span>
+                    </div>
+                    <span className="snapshot-preview">{s.body.slice(0, 80).replace(/\n/g, ' ')}…</span>
+                    <button
+                      className="btn-snapshot-restore"
+                      onClick={() => {
+                        if (window.confirm('Restore this checkpoint? Current body will be overwritten.')) {
+                          onRestoreSnapshot?.(s.body)
+                        }
+                      }}
+                    >
+                      Restore
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div className="editor-footer">
           <span className="editor-last-edited">

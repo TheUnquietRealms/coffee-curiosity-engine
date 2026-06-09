@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Article, Codex, ReviewResult } from '../types'
 import { runReview } from '../lib/review'
 import { MODES } from '../lib/modes'
+import { readabilityStats } from '../lib/utils'
 
 interface Props {
   article: Article | null
   codex: Codex
+  autoRunTrigger?: number
 }
 
 function scoreColor(score: number): string {
@@ -20,15 +22,26 @@ function ScoreBar({ score }: { score: number }) {
   )
 }
 
-export default function ReviewPanel({ article, codex }: Props) {
+function fleschColor(ease: number): string {
+  return ease >= 60 ? '#16A34A' : ease >= 40 ? '#B45309' : '#DC2626'
+}
+
+export default function ReviewPanel({ article, codex, autoRunTrigger }: Props) {
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [reviewedMode, setReviewedMode] = useState<string | null>(null)
 
-  // clear stale results when a different article is selected
   useEffect(() => {
     setResult(null)
     setReviewedMode(null)
   }, [article?.id])
+
+  useEffect(() => {
+    if (!autoRunTrigger || !article) return
+    const r = runReview(article, codex)
+    setResult(r)
+    setReviewedMode(article.mode)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRunTrigger])
 
   function handleRun() {
     if (!article) return
@@ -36,6 +49,8 @@ export default function ReviewPanel({ article, codex }: Props) {
     setResult(r)
     setReviewedMode(article.mode)
   }
+
+  const stats = useMemo(() => article ? readabilityStats(article.body) : null, [article?.body])
 
   const currentMode = article?.mode ?? 'essay'
   const modeConfig = MODES[currentMode]
@@ -52,6 +67,38 @@ export default function ReviewPanel({ article, codex }: Props) {
 
       {article && (
         <p className="review-editorial-tip">{modeConfig.editorialTip}</p>
+      )}
+
+      {stats && stats.sentences > 0 && (
+        <div className="analytics-grid">
+          <div className="analytics-stat">
+            <span className="analytics-value" style={{ color: fleschColor(stats.fleschEase) }}>
+              {stats.fleschEase}
+            </span>
+            <span className="analytics-label">Readability</span>
+            <span className="analytics-sub">{stats.fleschLabel}</span>
+          </div>
+          <div className="analytics-stat">
+            <span className="analytics-value">{stats.avgSentenceWords}</span>
+            <span className="analytics-label">Avg sentence</span>
+            <span className="analytics-sub">words</span>
+          </div>
+          <div className="analytics-stat">
+            <span className="analytics-value">{stats.sentences}</span>
+            <span className="analytics-label">Sentences</span>
+            <span className="analytics-sub">{stats.paragraphs} para</span>
+          </div>
+          <div className="analytics-stat">
+            <span
+              className="analytics-value"
+              style={{ color: stats.passiveCount > 3 ? '#B45309' : 'inherit' }}
+            >
+              {stats.passiveCount}
+            </span>
+            <span className="analytics-label">Passive</span>
+            <span className="analytics-sub">constructions</span>
+          </div>
+        </div>
       )}
 
       <button

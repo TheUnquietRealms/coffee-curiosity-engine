@@ -1,4 +1,4 @@
-import type { Article, Codex, WritingMode } from '../types'
+import type { Article, Codex, CodexOverrides, Snapshot, WritingMode } from '../types'
 import { DEFAULT_MODE } from './modes'
 
 const ARTICLES_KEY = 'cce_articles'
@@ -90,6 +90,106 @@ export function getMarkdown(article: Article): string {
   lines.push('')
   lines.push(article.body)
   return lines.join('\n')
+}
+
+const ONBOARDING_KEY = 'cce_onboarded'
+
+export function hasCompletedOnboarding(): boolean {
+  return localStorage.getItem(ONBOARDING_KEY) === '1'
+}
+
+export function markOnboardingComplete(): void {
+  localStorage.setItem(ONBOARDING_KEY, '1')
+}
+
+export function exportAllData(): void {
+  const data = {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    articles: loadArticles(),
+    codex: loadCodex(),
+    codexOverrides: loadCodexOverrides(),
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `cce-backup-${new Date().toISOString().slice(0, 10)}.json`
+  a.style.display = 'none'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+export function importAllData(json: string): { articles: Article[]; codex: Codex; codexOverrides: CodexOverrides } {
+  const data = JSON.parse(json) as Record<string, unknown>
+  if (!data || typeof data !== 'object') throw new Error('Invalid backup file')
+  const articles: Article[] = Array.isArray(data.articles)
+    ? (data.articles as Array<Omit<Article, 'mode'> & { mode?: WritingMode }>).map(a => ({
+        ...a,
+        mode: a.mode ?? DEFAULT_MODE,
+        outline: (a as Record<string, unknown>).outline as string ?? '',
+        tags: (a as Record<string, unknown>).tags as string[] ?? [],
+        project: (a as Record<string, unknown>).project as string ?? '',
+      }))
+    : []
+  const codex: Codex = (data.codex && typeof data.codex === 'object')
+    ? { ...DEFAULT_CODEX, ...(data.codex as Partial<Codex>) }
+    : { ...DEFAULT_CODEX }
+  const codexOverrides: CodexOverrides = (data.codexOverrides && typeof data.codexOverrides === 'object')
+    ? data.codexOverrides as CodexOverrides
+    : {}
+  saveArticles(articles)
+  saveCodex(codex)
+  saveCodexOverrides(codexOverrides)
+  return { articles, codex, codexOverrides }
+}
+
+const CODEX_OVERRIDES_KEY = 'cce_codex_overrides'
+const SNAPSHOTS_KEY = 'cce_snapshots'
+
+export function loadCodexOverrides(): CodexOverrides {
+  try {
+    const raw = localStorage.getItem(CODEX_OVERRIDES_KEY)
+    if (!raw) return {}
+    return JSON.parse(raw) as CodexOverrides
+  } catch {
+    return {}
+  }
+}
+
+export function saveCodexOverrides(overrides: CodexOverrides): void {
+  localStorage.setItem(CODEX_OVERRIDES_KEY, JSON.stringify(overrides))
+}
+
+export function effectiveCodex(base: Codex, overrides: CodexOverrides, mode: WritingMode): Codex {
+  const override = overrides[mode]
+  if (!override) return base
+  return { ...base, ...override }
+}
+
+function loadAllSnapshots(): Record<string, Snapshot[]> {
+  try {
+    const raw = localStorage.getItem(SNAPSHOTS_KEY)
+    if (!raw) return {}
+    return JSON.parse(raw) as Record<string, Snapshot[]>
+  } catch {
+    return {}
+  }
+}
+
+export function loadSnapshots(articleId: string): Snapshot[] {
+  return loadAllSnapshots()[articleId] ?? []
+}
+
+export function saveSnapshot(articleId: string, body: string): Snapshot[] {
+  const all = loadAllSnapshots()
+  const existing = all[articleId] ?? []
+  const updated = [{ ts: Date.now(), body }, ...existing].slice(0, 5)
+  all[articleId] = updated
+  localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(all))
+  return updated
 }
 
 export function exportMarkdown(article: Article): void {

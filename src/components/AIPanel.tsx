@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import type { Article, Codex } from '../types'
-import type { GeminiContext } from '../lib/gemini'
-import { streamGemini } from '../lib/gemini'
+import type { AIContext } from '../lib/ai'
+import { streamAI, findBannedViolations } from '../lib/ai'
+import type { AIConfig } from '../lib/ai'
 
 interface Props {
   article: Article | null
   codex: Codex
-  geminiKey: string
+  aiConfig: AIConfig
   onAppendToBody: (text: string) => void
   onSetOutline: (text: string) => void
 }
 
 type AIFeature = 'continue' | 'outline' | 'brainstorm' | 'research'
 
-function buildContext(article: Article, codex: Codex): GeminiContext {
+function buildContext(article: Article, codex: Codex): AIContext {
   return {
     mode: article.mode,
     voiceRules: codex.voiceRules,
@@ -23,18 +24,20 @@ function buildContext(article: Article, codex: Codex): GeminiContext {
   }
 }
 
-export default function AIPanel({ article, codex, geminiKey, onAppendToBody, onSetOutline }: Props) {
+export default function AIPanel({ article, codex, aiConfig, onAppendToBody, onSetOutline }: Props) {
   const [output, setOutput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [researchTopic, setResearchTopic] = useState('')
   const [cooldown, setCooldown] = useState(false)
+  const [violations, setViolations] = useState<string[]>([])
+  const [pendingFeature, setPendingFeature] = useState<AIFeature | null>(null)
 
-  if (!geminiKey) {
+  if (!aiConfig.apiKey) {
     return (
       <section className="ai-panel">
         <h2 className="panel-title">AI Assist</h2>
-        <p className="review-hint">Add your Gemini API key in ⚙ Settings to enable AI features.</p>
+        <p className="review-hint">Add your API key in ⚙ Settings to enable AI features.</p>
       </section>
     )
   }
@@ -53,6 +56,8 @@ export default function AIPanel({ article, codex, geminiKey, onAppendToBody, onS
     setLoading(true)
     setError(null)
     setOutput('')
+    setViolations([])
+    setPendingFeature(feature)
 
     const ctx = buildContext(article, codex)
     const prompts: Record<AIFeature, string> = {
@@ -64,13 +69,15 @@ export default function AIPanel({ article, codex, geminiKey, onAppendToBody, onS
 
     let accumulated = ''
     try {
-      for await (const chunk of streamGemini(geminiKey, ctx, prompts[feature])) {
+      for await (const chunk of streamAI(aiConfig, ctx, prompts[feature])) {
         accumulated += chunk
         setOutput(accumulated)
       }
       if (feature === 'outline') {
         onSetOutline(accumulated)
       }
+      const found = findBannedViolations(accumulated, codex.bannedHabits)
+      setViolations(found)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error'
       setError(
@@ -83,6 +90,20 @@ export default function AIPanel({ article, codex, geminiKey, onAppendToBody, onS
       setCooldown(true)
       setTimeout(() => setCooldown(false), 4000)
     }
+  }
+
+  function handleAppend() {
+    if (!output) return
+    onAppendToBody('\n\n' + output)
+    setOutput('')
+    setViolations([])
+    setPendingFeature(null)
+  }
+
+  function handleDiscard() {
+    setOutput('')
+    setViolations([])
+    setPendingFeature(null)
   }
 
   const disabled = loading || cooldown
@@ -129,11 +150,29 @@ export default function AIPanel({ article, codex, geminiKey, onAppendToBody, onS
       {output && (
         <div className="ai-output">
           <pre className="ai-output-text">{output}</pre>
+
+          {violations.length > 0 && (
+            <div className="ai-quality-gate">
+              <p className="ai-quality-gate-title">⚠ Quality gate — banned phrase{violations.length > 1 ? 's' : ''} detected:</p>
+              <ul className="ai-quality-gate-list">
+                {violations.map(v => <li key={v}>"{v}"</li>)}
+              </ul>
+              {pendingFeature && pendingFeature !== 'outline' && (
+                <button className="btn-ai" disabled={disabled} onClick={() => runFeature(pendingFeature!)}>
+                  ↻ Retry
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="ai-output-actions">
-            <button className="btn-review" onClick={() => onAppendToBody('\n\n' + output)}>
-              Append to body
+            <button
+              className={`btn-review${violations.length > 0 ? ' btn-review--warn' : ''}`}
+              onClick={handleAppend}
+            >
+              {violations.length > 0 ? 'Append anyway' : 'Append to body'}
             </button>
-            <button className="btn-toolbar" onClick={() => setOutput('')}>
+            <button className="btn-toolbar" onClick={handleDiscard}>
               Discard
             </button>
           </div>

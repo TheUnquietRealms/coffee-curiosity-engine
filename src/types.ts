@@ -28,6 +28,13 @@ export interface Codex {
   publicationChecklist: string
 }
 
+export type CodexOverrides = Partial<Record<WritingMode, Partial<Pick<Codex, 'voiceRules' | 'bannedHabits'>>>>
+
+export interface Snapshot {
+  ts: number
+  body: string
+}
+
 export interface ReviewScore {
   category: string
   score: number
