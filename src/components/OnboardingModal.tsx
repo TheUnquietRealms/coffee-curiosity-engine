@@ -35,7 +35,7 @@ export default function OnboardingModal({ defaultCodex, onComplete }: Props) {
         {step === 1 && (
           <div className="onboarding-step">
             <div className="onboarding-logo">☕</div>
-            <h1 className="onboarding-title">Coffee &amp; Curiosity</h1>
+            <h1 className="onboarding-title">The Writer</h1>
             <p className="onboarding-subtitle">Your private writing studio. No accounts. No sync. Everything stays in your browser.</p>
             <p className="onboarding-body">
               The <strong>Codex</strong> is your writer's identity — voice rules, banned phrases, recurring themes.

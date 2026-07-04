@@ -163,10 +163,9 @@ export default function ArticleNavigator({ articles, selectedId, onSelect, onUpd
     <aside className="navigator">
       <header className="nav-header">
         <div className="nav-brand">
-          <div className="nav-logo">☕</div>
+          <div className="nav-logo">✒️</div>
           <div className="nav-brand-text">
-            <span className="nav-brand-name">Coffee Curiosity</span>
-            <span className="nav-brand-sub">ENGINE</span>
+            <span className="nav-brand-name">The Writer</span>
           </div>
         </div>
         {onMobileClose && (
