@@ -1,6 +1,8 @@
-# Coffee & Curiosity Writing Engine
+# The Writer
 
-A private long-form writing studio for essays, Substack drafts, book notes, and public reasoning.
+*(formerly Coffee & Curiosity Writing Engine)*
+
+A private long-form writing studio for essays, fiction, and public reasoning.
 
 **Live:** https://coffee-curiosity-engine.pages.dev/
 
@@ -22,6 +24,12 @@ npm run dev
 
 ```bash
 npm run build
+```
+
+## Type-check
+
+```bash
+npm run typecheck
 ```
 
 ## Features
@@ -65,6 +73,7 @@ npm run build
 
 ## Release history
 
+- **1.0.0** — Rebrand to The Writer. Production closeout: type-checking fixed (`npm run typecheck`), MVP/MLP/Epics status documented in `docs/superpowers/specs/2026-07-05-closeout.md`.
 - **0.3.0** — Multi-provider AI assist (Gemini, OpenAI, OpenRouter, Anthropic) with selectable models
 - **0.2.1** — v2 complete: AI assist, grammar check, project grouping, focus timer, DOCX export, markdown preview, 5 new modes, tags, outline, score ring, branding
 - **0.1** — Private writing engine scaffold
