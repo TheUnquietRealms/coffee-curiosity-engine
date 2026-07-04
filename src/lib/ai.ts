@@ -101,7 +101,7 @@ async function* streamOpenAICompat(config: AIConfig, ctx: AIContext, userPrompt:
       'Authorization': `Bearer ${config.apiKey}`,
       ...(baseUrl.includes('openrouter') ? {
         'HTTP-Referer': 'https://coffee-curiosity-engine.pages.dev/',
-        'X-Title': 'Coffee & Curiosity Engine',
+        'X-Title': 'The Writer',
       } : {}),
     },
     body: JSON.stringify({

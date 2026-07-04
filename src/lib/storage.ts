@@ -8,7 +8,7 @@ const CODEX_KEY = 'cce_codex'
 export const DEFAULT_CODEX: Codex = {
   voiceRules: 'Write in first person. Use short sentences when making strong points. Never use passive voice to avoid accountability.',
   bannedHabits: 'delve into\nin conclusion\nit is worth noting\nfascinating\nunpack\nnavigate\nit\'s important to\nthe fact that',
-  recurringThemes: 'Coffee culture as a lens for society. Long-form thinking as resistance. The economics of attention.',
+  recurringThemes: 'Long-form thinking as resistance. The economics of attention.',
   sourceNotes: '',
   publicationChecklist: '- [ ] Read aloud once\n- [ ] Check opening sentence\n- [ ] Verify all claims sourced\n- [ ] Cut last paragraph and see if it improves\n- [ ] Check subtitle earns its place',
 }
