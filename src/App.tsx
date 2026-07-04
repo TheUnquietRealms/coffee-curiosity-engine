@@ -297,7 +297,7 @@ export default function App() {
           clearInterval(timerRef.current!)
           setTimerRunning(false)
           if (Notification.permission === 'granted') {
-            new Notification("CCE — Time's up!", { body: '25 minutes done. Take a break.' })
+            new Notification("The Writer — Time's up!", { body: '25 minutes done. Take a break.' })
           }
           return 0
         }
