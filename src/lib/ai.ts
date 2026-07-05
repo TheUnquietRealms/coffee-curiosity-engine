@@ -40,10 +40,10 @@ export const PROVIDER_MODELS: Record<AIProvider, Array<{ value: string; label: s
 }
 
 export const PROVIDER_HINTS: Record<AIProvider, string> = {
-  gemini: 'Free key at ai.google.dev — never sent anywhere except Google.',
-  openai: 'Key at platform.openai.com — usage billed to your OpenAI account.',
-  openrouter: 'Key at openrouter.ai — many free models available on free tier.',
-  anthropic: 'Key at console.anthropic.com — usage billed to your Anthropic account.',
+  gemini: 'Free key at ai.google.dev â never sent anywhere except Google.',
+  openai: 'Key at platform.openai.com â usage billed to your OpenAI account.',
+  openrouter: 'Key at openrouter.ai â many free models available on free tier.',
+  anthropic: 'Key at console.anthropic.com â usage billed to your Anthropic account.',
 }
 
 export const PROVIDER_LABELS: Record<AIProvider, string> = {
@@ -100,7 +100,7 @@ async function* streamOpenAICompat(config: AIConfig, ctx: AIContext, userPrompt:
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${config.apiKey}`,
       ...(baseUrl.includes('openrouter') ? {
-        'HTTP-Referer': 'https://coffee-curiosity-engine.pages.dev/',
+        'HTTP-Referer': 'https://thewriter.pages.dev/',
         'X-Title': 'The Writer',
       } : {}),
     },
