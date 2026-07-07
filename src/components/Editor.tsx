@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import type { Article, ArticleStatus, WritingMode, Codex, Snapshot } from '../types'
 import { exportMarkdown, getMarkdown } from '../lib/storage'
-import { exportDocx } from '../lib/export'
+import { exportDocx, exportPdf } from '../lib/export'
 import { MODE_LIST } from '../lib/modes'
 import { TEMPLATES } from '../lib/templates'
 import { countWords, relativeTime, readingTime } from '../lib/utils'
@@ -260,6 +260,14 @@ export default function Editor({ article, onChange, saveStatus, codex, snapshots
               title="Download as .docx"
             >
               DOCX
+            </button>
+            <button
+              className="btn-toolbar"
+              onClick={() => exportPdf(article)}
+              aria-label="Export as PDF"
+              title="Download as .pdf"
+            >
+              PDF
             </button>
             <button
               className="btn-focus"
