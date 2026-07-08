@@ -11,8 +11,6 @@ import {
   exportAllData, importAllData,
 } from './lib/storage'
 import { DEFAULT_CODEX } from './lib/storage'
-import { checkGrammar } from './lib/languageTool'
-import type { LTMatch } from './lib/languageTool'
 import { loadAIConfig, saveAIConfig } from './lib/ai'
 import type { AIConfig } from './lib/ai'
 import { THEME_IDS, isDarkTheme } from './lib/themes'
@@ -20,7 +18,6 @@ import ArticleNavigator from './components/ArticleNavigator'
 import Editor from './components/Editor'
 import CodexPanel from './components/CodexPanel'
 import ReviewPanel from './components/ReviewPanel'
-import GrammarPanel from './components/GrammarPanel'
 import SettingsPanel from './components/SettingsPanel'
 import AIPanel from './components/AIPanel'
 import OnboardingModal from './components/OnboardingModal'
@@ -33,16 +30,12 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [codex, setCodex] = useState<Codex>(DEFAULT_CODEX)
   const [codexOverrides, setCodexOverrides] = useState<CodexOverrides>({})
-  const [rightTab, setRightTab] = useState<'codex' | 'review' | 'grammar' | 'ai'>('codex')
+  const [rightTab, setRightTab] = useState<'codex' | 'review' | 'ai'>('codex')
   const [showSettings, setShowSettings] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [aiConfig, setAIConfig] = useState<AIConfig>(() => loadAIConfig())
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [focusMode, setFocusMode] = useState(false)
-  const [grammarMatches, setGrammarMatches] = useState<LTMatch[]>([])
-  const [grammarLoading, setGrammarLoading] = useState(false)
-  const [grammarError, setGrammarError] = useState<string | null>(null)
-  const [grammarCooldown, setGrammarCooldown] = useState(false)
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null)
   const [timerRunning, setTimerRunning] = useState(false)
   const [snapshots, setSnapshots] = useState<Snapshot[]>([])
@@ -213,30 +206,6 @@ export default function App() {
     }
   }, [selected, handleArticleChange])
 
-  const handleGrammarCheck = useCallback(async () => {
-    if (!selected || grammarCooldown) return
-    setGrammarLoading(true)
-    setGrammarError(null)
-    setRightTab('grammar')
-    try {
-      const result = await checkGrammar(selected.body)
-      setGrammarMatches(result.matches)
-    } catch (e) {
-      setGrammarError(e instanceof Error ? e.message : 'Grammar check failed')
-    } finally {
-      setGrammarLoading(false)
-      setGrammarCooldown(true)
-      setTimeout(() => setGrammarCooldown(false), 3000)
-    }
-  }, [selected, grammarCooldown])
-
-  const handleApplyReplacement = useCallback((match: LTMatch, replacement: string) => {
-    if (!selected) return
-    const body = selected.body.slice(0, match.offset) + replacement + selected.body.slice(match.offset + match.length)
-    handleArticleChange({ ...selected, body })
-    setGrammarMatches(prev => prev.filter(m => m !== match))
-  }, [selected, handleArticleChange])
-
   const handleAppendToBody = useCallback((text: string) => {
     if (!selected) return
     handleArticleChange({ ...selected, body: selected.body + text })
@@ -272,12 +241,10 @@ export default function App() {
         if (e.key === 'N') { e.preventDefault(); handleNewArticle() }
         if (e.key === 'F') { e.preventDefault(); setFocusMode(f => !f) }
         if (e.key === 'R') { e.preventDefault(); setRightTab('review'); setReviewTrigger(t => t + 1) }
-        if (e.key === 'G') { e.preventDefault(); handleGrammarCheck() }
         if (e.key === 'S') { e.preventDefault(); handleSaveSnapshot() }
         if (e.key === '1') { e.preventDefault(); setRightTab('codex') }
         if (e.key === '2') { e.preventDefault(); setRightTab('review') }
-        if (e.key === '3') { e.preventDefault(); setRightTab('grammar') }
-        if (e.key === '4') { e.preventDefault(); setRightTab('ai') }
+        if (e.key === '3') { e.preventDefault(); setRightTab('ai') }
       }
       if (e.key === '?' && !inField) setShowShortcuts(s => !s)
       if (e.key === 'Escape') {
@@ -288,7 +255,7 @@ export default function App() {
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
-  }, [handleNewArticle, handleGrammarCheck, handleSaveSnapshot])
+  }, [handleNewArticle, handleSaveSnapshot])
 
   useEffect(() => {
     if (!timerRunning || timerSeconds === null) return
@@ -356,8 +323,6 @@ export default function App() {
           onToggleFocus={() => setFocusMode(f => !f)}
           darkMode={isDarkTheme(theme)}
           onToggleDark={() => setTheme(t => isDarkTheme(t) ? 'light' : 'dark')}
-          onGrammarCheck={handleGrammarCheck}
-          grammarCooldown={grammarCooldown}
           timerSeconds={timerSeconds}
           timerRunning={timerRunning}
           onToggleTimer={toggleTimer}
@@ -378,12 +343,6 @@ export default function App() {
               Review
             </button>
             <button
-              className={`tab-btn${rightTab === 'grammar' ? ' tab-btn--active' : ''}`}
-              onClick={() => setRightTab('grammar')}
-            >
-              Grammar
-            </button>
-            <button
               className={`tab-btn${rightTab === 'ai' ? ' tab-btn--active' : ''}`}
               onClick={() => setRightTab('ai')}
             >
@@ -398,8 +357,6 @@ export default function App() {
                 onAppendToBody={handleAppendToBody}
                 onSetOutline={handleSetOutline}
               />
-            : rightTab === 'grammar'
-            ? <GrammarPanel matches={grammarMatches} article={selected} onApply={handleApplyReplacement} loading={grammarLoading} error={grammarError} />
             : rightTab === 'codex'
             ? <CodexPanel
                 codex={codex}
