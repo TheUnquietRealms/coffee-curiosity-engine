@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { AIConfig, AIProvider } from '../lib/ai'
 import { PROVIDER_HINTS, PROVIDER_LABELS, PROVIDER_MODELS, saveAIConfig } from '../lib/ai'
+import { THEMES } from '../lib/themes'
 
 const PROVIDERS: AIProvider[] = ['gemini', 'openai', 'openrouter', 'anthropic']
 
@@ -10,9 +11,11 @@ interface Props {
   onClose: () => void
   onExportAll: () => void
   onImportAll: (json: string) => void
+  theme: string
+  onChangeTheme: (theme: string) => void
 }
 
-export default function SettingsPanel({ aiConfig, onSaveAI, onClose, onExportAll, onImportAll }: Props) {
+export default function SettingsPanel({ aiConfig, onSaveAI, onClose, onExportAll, onImportAll, theme, onChangeTheme }: Props) {
   const [provider, setProvider] = useState<AIProvider>(aiConfig.provider)
   const [model, setModel] = useState(aiConfig.model)
   const [apiKey, setApiKey] = useState(aiConfig.apiKey)
@@ -57,6 +60,22 @@ export default function SettingsPanel({ aiConfig, onSaveAI, onClose, onExportAll
         <h2 className="panel-title">Settings</h2>
         <button className="btn-settings-close" onClick={onClose} aria-label="Close settings">✕</button>
       </header>
+
+      <p className="settings-section-title">Appearance</p>
+
+      <div className="settings-theme-grid">
+        {THEMES.map(t => (
+          <button
+            key={t.id}
+            className={`btn-theme-swatch btn-theme-swatch--${t.id}${theme === t.id ? ' btn-theme-swatch--active' : ''}`}
+            onClick={() => onChangeTheme(t.id)}
+            aria-pressed={theme === t.id}
+          >
+            <span className="theme-swatch-dot" />
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       <p className="settings-section-title">AI Provider</p>
 
