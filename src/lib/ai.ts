@@ -10,6 +10,8 @@ export interface AIContext {
   mode: string
   voiceRules: string
   bannedHabits: string
+  recurringThemes: string
+  sourceNotes: string
   bodySample: string
   title: string
 }
@@ -68,12 +70,19 @@ export function saveAIConfig(config: AIConfig): void {
 }
 
 function buildSystemPrompt(ctx: AIContext): string {
-  return [
+  const lines = [
     `You are a writing assistant for a ${ctx.mode} piece titled "${ctx.title}".`,
     `Voice rules: ${ctx.voiceRules.slice(0, 400)}`,
     `Never use these phrases: ${ctx.bannedHabits.slice(0, 200)}`,
-    `Match the voice in this sample: "${ctx.bodySample.slice(0, 500)}"`,
-  ].join('\n')
+  ]
+  if (ctx.recurringThemes?.trim()) {
+    lines.push(`Recurring themes to draw on where relevant: ${ctx.recurringThemes.slice(0, 300)}`)
+  }
+  if (ctx.sourceNotes?.trim()) {
+    lines.push(`Reference material / source notes: ${ctx.sourceNotes.slice(0, 500)}`)
+  }
+  lines.push(`Match the voice in this sample: "${ctx.bodySample.slice(0, 500)}"`)
+  return lines.join('\n')
 }
 
 async function* streamGemini(config: AIConfig, ctx: AIContext, userPrompt: string, maxTokens: number): AsyncGenerator<string> {
