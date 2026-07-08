@@ -23,8 +23,6 @@ interface Props {
   onToggleFocus?: () => void
   darkMode?: boolean
   onToggleDark?: () => void
-  onGrammarCheck?: () => void
-  grammarCooldown?: boolean
   timerSeconds?: number | null
   timerRunning?: boolean
   onToggleTimer?: () => void
@@ -56,7 +54,7 @@ function buildHighlightHtml(text: string, phrases: string[]): string {
 
 const STATUSES: ArticleStatus[] = ['draft', 'review', 'published']
 
-export default function Editor({ article, onChange, saveStatus, codex, snapshots, onSaveSnapshot, onRestoreSnapshot, onStatusChange, onToggleNav, onToggleRightPanel, focusMode, onToggleFocus, darkMode, onToggleDark, onGrammarCheck, grammarCooldown, timerSeconds, timerRunning, onToggleTimer, onResetTimer }: Props) {
+export default function Editor({ article, onChange, saveStatus, codex, snapshots, onSaveSnapshot, onRestoreSnapshot, onStatusChange, onToggleNav, onToggleRightPanel, focusMode, onToggleFocus, darkMode, onToggleDark, timerSeconds, timerRunning, onToggleTimer, onResetTimer }: Props) {
   const [copied, setCopied] = useState(false)
   const [settingTarget, setSettingTarget] = useState(false)
   const [targetInput, setTargetInput] = useState('')
@@ -222,14 +220,6 @@ export default function Editor({ article, onChange, saveStatus, codex, snapshots
             <span className="editor-wordcount" aria-live="polite">
               {words.toLocaleString()}w
             </span>
-            <button
-              className="btn-toolbar"
-              onClick={onGrammarCheck}
-              disabled={grammarCooldown || !article}
-              title="Check grammar (LanguageTool, free)"
-            >
-              Grammar
-            </button>
             <button
               className={`btn-toolbar${previewMode ? ' btn-toolbar--accent' : ''}`}
               onClick={() => setPreviewMode(p => !p)}

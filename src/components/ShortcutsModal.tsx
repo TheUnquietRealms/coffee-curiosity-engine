@@ -8,9 +8,8 @@ const SHORTCUTS = [
   { keys: '⌘⇧N / Ctrl⇧N', desc: 'New article' },
   { keys: '⌘⇧F / Ctrl⇧F', desc: 'Toggle focus mode' },
   { keys: '⌘⇧R / Ctrl⇧R', desc: 'Run review' },
-  { keys: '⌘⇧G / Ctrl⇧G', desc: 'Grammar check' },
   { keys: '⌘⇧S / Ctrl⇧S', desc: 'Save checkpoint' },
-  { keys: '⌘⇧1–4 / Ctrl⇧1–4', desc: 'Switch panels (Codex / Review / Grammar / AI)' },
+  { keys: '⌘⇧1–3 / Ctrl⇧1–3', desc: 'Switch panels (Codex / Review / AI)' },
   { keys: '?', desc: 'Show this help (when not in a text field)' },
   { keys: 'Esc', desc: 'Close this panel / close drawer' },
 ]
