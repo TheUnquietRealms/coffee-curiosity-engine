@@ -15,6 +15,7 @@ import { checkGrammar } from './lib/languageTool'
 import type { LTMatch } from './lib/languageTool'
 import { loadAIConfig, saveAIConfig } from './lib/ai'
 import type { AIConfig } from './lib/ai'
+import { THEME_IDS, isDarkTheme } from './lib/themes'
 import ArticleNavigator from './components/ArticleNavigator'
 import Editor from './components/Editor'
 import CodexPanel from './components/CodexPanel'
@@ -50,16 +51,16 @@ export default function App() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [reviewTrigger, setReviewTrigger] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [darkMode, setDarkMode] = useState(() => {
+  const [theme, setTheme] = useState<string>(() => {
     const stored = localStorage.getItem('cce_theme')
-    if (stored) return stored === 'dark'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
+    if (stored && THEME_IDS.includes(stored)) return stored
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
 
   useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light'
-    localStorage.setItem('cce_theme', darkMode ? 'dark' : 'light')
-  }, [darkMode])
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('cce_theme', theme)
+  }, [theme])
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -327,6 +328,8 @@ export default function App() {
                 onClose={() => setShowSettings(false)}
                 onExportAll={handleExportAll}
                 onImportAll={handleImportAll}
+                theme={theme}
+                onChangeTheme={setTheme}
               />
             : <ArticleNavigator
                 articles={articles}
@@ -351,8 +354,8 @@ export default function App() {
           onToggleRightPanel={() => setRightPanelMobileOpen(r => !r)}
           focusMode={focusMode}
           onToggleFocus={() => setFocusMode(f => !f)}
-          darkMode={darkMode}
-          onToggleDark={() => setDarkMode(d => !d)}
+          darkMode={isDarkTheme(theme)}
+          onToggleDark={() => setTheme(t => isDarkTheme(t) ? 'light' : 'dark')}
           onGrammarCheck={handleGrammarCheck}
           grammarCooldown={grammarCooldown}
           timerSeconds={timerSeconds}
